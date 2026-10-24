@@ -60,3 +60,12 @@ class PatternDetector:
             severity=severity,
             reasons=[reason for reason, _ in matches]
         )
+
+    def analyze(self, text: str) -> dict[str, object]:
+        result = self.detect(text)
+        return {
+            "is_injection": result.is_injection,
+            "confidence": result.confidence,
+            "severity": result.severity.value,
+            "reasons": result.reasons,
+        }
