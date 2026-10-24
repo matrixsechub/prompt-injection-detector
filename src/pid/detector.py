@@ -20,8 +20,8 @@ class PromptInjectionDetector:
         pattern_result = self.pattern_detector.detect(text)
         heuristic_result = self.heuristic_detector.detect(text)
 
-        # If neither detector fires → no injection
-        if not pattern_result.is_injection and not heuristic_result.is_injection:
+        # If neither detector finds evidence → no injection
+        if not pattern_result.reasons and not heuristic_result.reasons:
             return DetectionResult(
                 is_injection=False,
                 confidence=0.0,
@@ -30,8 +30,12 @@ class PromptInjectionDetector:
             )
 
         # --- Fusion Logic ---
-        # Blend confidence scores
-        confidence = max(pattern_result.confidence, heuristic_result.confidence)
+        # Blend confidence scores across detectors. Weak signals can add up to
+        # a high-confidence injection even when each detector is sub-threshold.
+        confidence = min(
+            pattern_result.confidence + heuristic_result.confidence,
+            1.0,
+        )
 
         # Combine reasons
         reasons = []
@@ -39,9 +43,17 @@ class PromptInjectionDetector:
         reasons.extend(heuristic_result.reasons)
 
         # Severity escalation rules
-        if pattern_result.severity == Severity.HIGH or heuristic_result.severity == Severity.HIGH:
+        if (
+            confidence >= 0.8
+            or pattern_result.severity == Severity.HIGH
+            or heuristic_result.severity == Severity.HIGH
+        ):
             severity = Severity.HIGH
-        elif pattern_result.severity == Severity.MEDIUM or heuristic_result.severity == Severity.MEDIUM:
+        elif (
+            confidence >= 0.5
+            or pattern_result.severity == Severity.MEDIUM
+            or heuristic_result.severity == Severity.MEDIUM
+        ):
             severity = Severity.MEDIUM
         else:
             severity = Severity.LOW
