@@ -1,11 +1,2 @@
-📦 Final recommended structure
-
-regex
-click
-
-
-
-
-
-
-
+# Runtime has no third-party dependencies (see pyproject.toml).
+# Install the package with: pip install -e .

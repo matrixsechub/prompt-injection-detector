@@ -6,14 +6,20 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -e . || pip install -r requirements.txt || echo "No installable package"
+      # Every step must be able to fail the job. Do not append `|| echo`.
+      - run: pip install -e .
       - run: pip install pytest
-      - run: pytest --tb=short || echo "No tests found"
+      - run: pytest --tb=short

@@ -1,5 +1,3 @@
-📦 Final recommended structure
-
 pytest
 pytest-cov
 black
