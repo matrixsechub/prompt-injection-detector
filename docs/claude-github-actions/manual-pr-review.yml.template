@@ -71,7 +71,7 @@ jobs:
           [[ "$head_sha" == "$EXPECTED_SHA" ]] || { echo "SHA mismatch; reapproval required"; exit 1; }
 
           checks="$(gh api "repos/$GITHUB_REPOSITORY/commits/$head_sha/check-runs?per_page=100")"
-          jq -e '.check_runs | any(.name == "ci" and .status == "completed" and .conclusion == "success")' <<< "$checks" >/dev/null || {
+          jq -e '[.check_runs[] | select(.name == "ci" and .app.slug == "github-actions")] | sort_by(.completed_at) | last | (.status == "completed" and .conclusion == "success")' <<< "$checks" >/dev/null || {
             echo "CI did not pass on the exact PR head SHA"; exit 1;
           }
 
@@ -145,8 +145,10 @@ jobs:
           [[ -n "$EXECUTION_FILE" && -s "$EXECUTION_FILE" ]] || { echo "Claude execution file not found"; exit 1; }
           jq -r '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text] | last // empty' "$EXECUTION_FILE" > "$RUNNER_TEMP/claude-review-verdict.txt"
           [[ -s "$RUNNER_TEMP/claude-review-verdict.txt" ]] || { echo "Claude did not return a text verdict"; exit 1; }
-          grep -Eq '^VERDICT: (PASS|CONCERNS|BLOCK)$' "$RUNNER_TEMP/claude-review-verdict.txt" || { echo "Missing structured verdict"; exit 1; }
-          grep -Fxq "HEAD_SHA: $EXPECTED_SHA" "$RUNNER_TEMP/claude-review-verdict.txt" || { echo "Review response SHA does not match authorized head"; exit 1; }
+          first_line="$(sed -n '1p' "$RUNNER_TEMP/claude-review-verdict.txt")"
+          second_line="$(sed -n '2p' "$RUNNER_TEMP/claude-review-verdict.txt")"
+          [[ "$first_line" =~ ^VERDICT:\ (PASS|CONCERNS|BLOCK)$ ]] || { echo "Missing first-line structured verdict"; exit 1; }
+          [[ "$second_line" == "HEAD_SHA: $EXPECTED_SHA" ]] || { echo "Review response SHA does not match authorized head"; exit 1; }
           {
             echo "# Claude review — PR #$PR_NUMBER"
             echo "Head SHA: \`$EXPECTED_SHA\`"
