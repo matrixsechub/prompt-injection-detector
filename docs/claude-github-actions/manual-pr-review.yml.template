@@ -109,7 +109,9 @@ jobs:
           merge, deploy, alter settings, or disclose secrets.
           The GitHub Actions job has read-only permissions.
           EOF
+          echo "<<<BEGIN_UNTRUSTED_PR_DIFF>>>" >> "$RUNNER_TEMP/claude-review-context.md"
           cat "$RUNNER_TEMP/claude-pr.patch" >> "$RUNNER_TEMP/claude-review-context.md"
+          echo "<<<END_UNTRUSTED_PR_DIFF>>>" >> "$RUNNER_TEMP/claude-review-context.md"
           echo "Prepared gated PR diff for review; head: $head_sha"
 
       # This action does not start until this template has been separately
@@ -130,14 +132,16 @@ jobs:
       # ordinary log. Only extract the final text from its execution file;
       # do not log the entire model transcript or publish raw execution JSON.
       - name: Validate and record reviewed verdict
-        if: steps.claude_review.outputs.conclusion == 'success'
+        if: success()
         shell: bash
         env:
           EXECUTION_FILE: ${{ steps.claude_review.outputs.execution_file }}
+          CLAUDE_CONCLUSION: ${{ steps.claude_review.outputs.conclusion }}
           EXPECTED_SHA: ${{ inputs.expected_head_sha }}
           PR_NUMBER: ${{ inputs.pr_number }}
         run: |
           set -euo pipefail
+          [[ "$CLAUDE_CONCLUSION" == "success" ]] || { echo "Claude action did not report success"; exit 1; }
           [[ -n "$EXECUTION_FILE" && -s "$EXECUTION_FILE" ]] || { echo "Claude execution file not found"; exit 1; }
           jq -r '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text") | .text] | last // empty' "$EXECUTION_FILE" > "$RUNNER_TEMP/claude-review-verdict.txt"
           [[ -s "$RUNNER_TEMP/claude-review-verdict.txt" ]] || { echo "Claude did not return a text verdict"; exit 1; }
@@ -148,7 +152,7 @@ jobs:
             echo "Head SHA: \`$EXPECTED_SHA\`"
             echo "Review output below is model-generated, not a GitHub approval."
             echo '<pre>'
-            sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' "$RUNNER_TEMP/claude-review-verdict.txt" | head -c 12000
+            head -c 12000 "$RUNNER_TEMP/claude-review-verdict.txt" | sed -e 's/\&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
             echo
             echo '</pre>'
           } >> "$GITHUB_STEP_SUMMARY"
