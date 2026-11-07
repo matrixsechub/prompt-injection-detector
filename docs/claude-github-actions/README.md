@@ -6,7 +6,7 @@ Scope: `matrixsechub/prompt-injection-detector`, with initial target PR #3. This
 
 ## Why the review-only Base Action?
 
-Anthropic documents `anthropics/claude-code-base-action@beta` and the `claude_code_oauth_token` input for Claude Pro/Max setup tokens. The Base Action does not need write access to GitHub to analyze a supplied PR diff. The normal full `claude-code-action@v1` + GitHub App is more suitable for automatic PR conversations and code edits; those powers are unnecessary here.
+Anthropic documents the Claude Code Base Action and its `claude_code_oauth_token` input. This draft pins a reviewed upstream commit instead of using the mutable `@beta` tag. The Base Action does not need write access to GitHub to analyze a supplied PR diff. The normal full `claude-code-action@v1` + GitHub App is more suitable for automatic PR conversations and code edits; those powers are unnecessary here.
 
 Sources (verify again before activation):
 - https://github.com/anthropics/claude-code-action/blob/main/base-action/README.md
@@ -34,21 +34,22 @@ Sources (verify again before activation):
 ## Execution safeguards in the template
 
 - Only `workflow_dispatch` can trigger; there is no PR, push, comment, or schedule trigger.
-- Manual dispatch restricted to GitHub actor `matrixsechub`, plus explicit one-run approval input.
-- Every run verifies that the PR is open, targets `main`, originates from the same repository, and exactly matches the approved full head SHA. It refuses to run Claude if a successful `ci` check is not found for that SHA.
+- Manual dispatch is allowed only when GitHub actor is `matrixsechub` **and** run branch is `main`, with an explicit one-run approval input. Do not dispatch the workflow from a feature branch.
+- Every run verifies that the PR is open, targets `main`, originates from the same repository, and exactly matches the approved full head SHA. It refuses to run Claude if a successful `ci` check is not found for that SHA. It rechecks both PR head and base SHA after fetching the diff to guard against concurrent changes.
 - Diff size cap 100 KB; GH CLI gets PR diff as text. Does **not checkout the PR's potentially untrusted head**.
 - Only `contents: read`, `pull-requests: read`, `checks: read`, `actions: read`; no `write` or `id-token` permissions. Claude allowed tools: `Read,Glob,Grep`. No shell/edit tools.
-- No GitHub issue/PR comments are posted; result is reviewed through the GitHub Actions run log. Do not enable full raw output debugging; public repository logs may be public.
+- No GitHub issue/PR comments are posted. The pinned Base Action deliberately hides model text in ordinary logs; the template extracts the final assistant verdict from its execution file, validates the expected head SHA, and publishes only escaped/truncated verdict text to the **GitHub Actions job summary**. Do not enable full raw output debugging; summaries/logs from public repository actions can be public.
 - `timeout-minutes: 12` and `--max-turns 8` are bounded work controls, but are **not a financial hard cap**.
 
 ## Known constraints / unresolved before activation
 
 - A `claude setup-token` credential is still a sensitive long-lived secret. The operator owns its local creation, storage, rotation, and revocation.
 - Pro/Max subscription usage limits and overage arrangements must be checked in the operator's Anthropic account. The preparer cannot inspect them.
-- GitHub's `claude-code-base-action@beta` upstream tag is mutable; pinning is recommended before activation.
+- Both the Base Action and checkout action are pinned to immutable commits. Pins are integrity controls, **not** proof of a security audit. The pinned Base Action downloads Claude Code using an installer, and its settings initializer enables project MCP servers; inspect these transitive behaviors and ensure no untrusted MCP configuration is present on the trusted default branch before activation.
 - Base Action is a thin wrapper and does not enforce security boundaries independently; this workflow supplies the manual authorization, same-repo/sha checks and minimal permissions.
 - A GitHub Action review is **not** the managed Team/Enterprise Claude Code Review product. A model's PASS verdict is evidence for operator assessment, not a GitHub approval or merge permission.
-- The current GitHub workflow folder has only `ci.yml`. This spec does not alter it.
+- This manually dispatched, usage-gated review deviates from the generic SOP's automatically triggered review assumption. The operator must explicitly accept that bounded exception before activation.
+- The current GitHub workflow folder has only `ci.yml`. This spec does not alter it. Existing Python CI passing does not test the inactive workflow YAML; activation must undergo a static workflow syntax/security check before a credential is added.
 - Pinned Base Action source: https://github.com/anthropics/claude-code-base-action/tree/1ba86a1578bc4350db6af753284bc09734ca18bf. It is pinned for integrity; a pin is not a security audit.
 
 ## MSH-OPS governance
