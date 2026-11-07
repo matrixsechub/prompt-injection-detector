@@ -105,7 +105,7 @@ jobs:
       # approved, copied into .github/workflows/ and manually dispatched.
       # OAuth is stored as a GitHub Actions SECRET; no credential in the repo.
       - name: Run bounded Claude Code review (read tools only)
-        uses: anthropics/claude-code-base-action@beta
+        uses: anthropics/claude-code-base-action@1ba86a1578bc4350db6af753284bc09734ca18bf
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt_file: ${{ runner.temp }}/claude-review-context.md
