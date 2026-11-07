@@ -19,7 +19,7 @@ Sources (verify again before activation):
 2. On an authorized local machine, sign in to Claude Code with the operator's **Pro/Max** account; run `claude setup-token` according to current Anthropic instructions. NEVER paste the token into ChatGPT, ClickUp, a commit or a PR.
 3. Operator adds token to GitHub repository **Settings → Secrets and variables → Actions → New repository secret** named `CLAUDE_CODE_OAUTH_TOKEN`. Do not add `ANTHROPIC_API_KEY` or enable Console extra/API spending unless separately authorized.
 4. Operator checks Claude subscription **usage credits / extra usage** settings and disables pay-as-you-go overages if unwilling to incur additional charges. GitHub Actions runner usage may be separately metered. `--max-turns` and `timeout-minutes` limit work, NOT dollars, and are not a guaranteed spending cap.
-5. After reviewing the mutable `@beta` dependency, pin the Base Action to an audited immutable commit SHA before activation where feasible. Consider re-reviewing the latest upstream documented interface.
+5. Base Action is pinned to immutable commit `1ba86a1578bc4350db6af753284bc09734ca18bf` (verified to support `prompt_file`, `claude_args`, and `claude_code_oauth_token`). Independently audit the pinned action and its transitive downloads before activation. Re-review upstream interface before any later upgrade.
 6. Operator approves creating a **separate activation PR** that copies `manual-pr-review.yml.template` to `.github/workflows/claude-pr-review.yml`. Merge to `main` only by the Operator. This is the activation step and is NOT authorized by preparing this template.
 7. No run occurs automatically. For each paid/usage-consuming run, Operator explicitly opens GitHub Actions → Claude Code — Operator-Approved Manual PR Review → Run workflow, enters PR number, complete exact head SHA, and selects `APPROVE_ONE_REVIEW`. Default is `DENY`.
 8. Record the resulting Claude verdict, reviewed exact SHA, CI link, cost/usage observation and operator disposition in ClickUp. No auto-merge.
@@ -49,6 +49,7 @@ Sources (verify again before activation):
 - Base Action is a thin wrapper and does not enforce security boundaries independently; this workflow supplies the manual authorization, same-repo/sha checks and minimal permissions.
 - A GitHub Action review is **not** the managed Team/Enterprise Claude Code Review product. A model's PASS verdict is evidence for operator assessment, not a GitHub approval or merge permission.
 - The current GitHub workflow folder has only `ci.yml`. This spec does not alter it.
+- Pinned Base Action source: https://github.com/anthropics/claude-code-base-action/tree/1ba86a1578bc4350db6af753284bc09734ca18bf. It is pinned for integrity; a pin is not a security audit.
 
 ## MSH-OPS governance
 
