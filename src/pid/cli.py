@@ -48,3 +48,7 @@ def main():
         print("\n--- Reasons ---")
         for reason in result.reasons:
             print(f"• {reason}")
+
+
+if __name__ == "__main__":
+    main()
