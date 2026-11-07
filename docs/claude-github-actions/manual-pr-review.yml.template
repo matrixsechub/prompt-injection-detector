@@ -147,7 +147,10 @@ jobs:
           [[ -s "$RUNNER_TEMP/claude-review-verdict.txt" ]] || { echo "Claude did not return a text verdict"; exit 1; }
           first_line="$(sed -n '1p' "$RUNNER_TEMP/claude-review-verdict.txt")"
           second_line="$(sed -n '2p' "$RUNNER_TEMP/claude-review-verdict.txt")"
-          [[ "$first_line" =~ ^VERDICT:\ (PASS|CONCERNS|BLOCK)$ ]] || { echo "Missing first-line structured verdict"; exit 1; }
+          case "$first_line" in
+            "VERDICT: PASS"|"VERDICT: CONCERNS"|"VERDICT: BLOCK") ;;
+            *) echo "Missing first-line structured verdict"; exit 1 ;;
+          esac
           [[ "$second_line" == "HEAD_SHA: $EXPECTED_SHA" ]] || { echo "Review response SHA does not match authorized head"; exit 1; }
           {
             echo "# Claude review — PR #$PR_NUMBER"
