@@ -37,7 +37,7 @@ Sources (verify again before activation):
 - Manual dispatch restricted to GitHub actor `matrixsechub`, plus explicit one-run approval input.
 - Every run verifies that the PR is open, targets `main`, originates from the same repository, and exactly matches the approved full head SHA. It refuses to run Claude if a successful `ci` check is not found for that SHA.
 - Diff size cap 100 KB; GH CLI gets PR diff as text. Does **not checkout the PR's potentially untrusted head**.
-- Only `contents: read`, `pull-requests: read`, `actions: read`; no `write` or `id-token` permissions. Claude allowed tools: `Read,Glob,Grep`. No shell/edit tools.
+- Only `contents: read`, `pull-requests: read`, `checks: read`, `actions: read`; no `write` or `id-token` permissions. Claude allowed tools: `Read,Glob,Grep`. No shell/edit tools.
 - No GitHub issue/PR comments are posted; result is reviewed through the GitHub Actions run log. Do not enable full raw output debugging; public repository logs may be public.
 - `timeout-minutes: 12` and `--max-turns 8` are bounded work controls, but are **not a financial hard cap**.
 
