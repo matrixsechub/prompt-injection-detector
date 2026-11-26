@@ -1,6 +1,7 @@
-📦 Final recommended structure
-
 pytest
 pytest-cov
 black
 ruff
+mypy
+types-setuptools
+jsonschema

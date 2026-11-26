@@ -1,8 +1,6 @@
-# tests/test_cli.py
-
+import json
 import subprocess
 import sys
-import json
 
 
 def run_pid(args):
