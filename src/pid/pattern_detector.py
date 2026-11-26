@@ -1,5 +1,6 @@
 import re
-from typing import List, Tuple, Pattern
+from typing import List, Pattern, Tuple
+
 from pid.models import DetectionResult, Severity
 
 

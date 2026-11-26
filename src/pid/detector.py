@@ -1,6 +1,6 @@
-from pid.pattern_detector import PatternDetector
 from pid.heuristic_detector import HeuristicDetector
 from pid.models import DetectionResult, Severity
+from pid.pattern_detector import PatternDetector
 
 
 class PromptInjectionDetector:

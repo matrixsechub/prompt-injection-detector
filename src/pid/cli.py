@@ -1,4 +1,5 @@
 import argparse
+
 from pid.detector import PromptInjectionDetector
 
 

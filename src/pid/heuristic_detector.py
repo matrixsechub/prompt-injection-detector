@@ -1,4 +1,3 @@
-import re
 from pid.models import DetectionResult, Severity
 
 

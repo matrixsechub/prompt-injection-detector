@@ -1,6 +1,3 @@
-# tests/test_detector.py
-
-import pytest
 from pid.detector import PromptInjectionDetector
 from pid.models import Severity
 

@@ -1,6 +1,3 @@
-# tests/test_pattern_detector.py
-
-import pytest
 from pid.pattern_detector import PatternDetector
 
 
